@@ -1,32 +1,30 @@
-name: Test
+name: Check connect vpn
 
 on:
   push:
     branches:
       - master
-    paths-ignore:
-      - README.md
-  pull_request:
-
 
 jobs:
-  hello_world_job:
+  check-vpn:
     runs-on: ubuntu-latest
-    name: Typical Usage of OpenVPN
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install OpenVPN
-        run: |
-          sudo apt update
-          sudo apt install -y openvpn openvpn-systemd-resolved
-      - name: Connect to VPN
-        uses: "kota65535/github-openvpn-connect-action@v1"
+      - uses: actions/checkout@v1
+      - name: Install Open VPN
+        run: sudo apt-get install openvpn
+      - name: Connect VPN
+        uses: golfzaptw/action-connect-ovpn@master
+        id: connect_vpn
         with:
-          config_file: .github/workflows/client.ovpn
-          username: ${{ secrets.OVPN_USERNAME }}
-          password: ${{ secrets.OVPN_PASSWORD }}
-          client_key: ${{ secrets.OVPN_CLIENT_KEY }}
-          tls_auth_key: ${{ secrets.OVPN_TLS_AUTH_KEY }}
-      - name: Check if connected
+          PING_URL: '127.0.0.1'
+          FILE_OVPN: '.github/vpn/config.ovpn'
+          SECRET: ${{ secrets.SECRET_USERNAME_PASSWORD }}
+        env:
+          CA_CRT: ${{ secrets.CA_CRT}}
+          USER_CRT: ${{ secrets.USER_CRT }}
+          USER_KEY: ${{ secrets.USER_KEY }}
+      - name: Check Connect VPN
         run: echo ${{ steps.connect_vpn.outputs.STATUS }}
+      - name: kill vpn
+        if: always()
+        run: sudo killall openvpn
